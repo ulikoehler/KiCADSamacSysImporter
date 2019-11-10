@@ -181,17 +181,19 @@ def extract_relevant_files(filename):
             with thezip.open(zipinfo) as thefile:
                 yield partname, filename_without_tldir, thefile
 
-def import_zip(filename):
+def import_zip(filename, dry_run=False):
     for partname, filename, handle in extract_relevant_files(filename):
         canonical = filename.rpartition("/")[-1]
         ext = filename.rpartition(".")[-1]
 
         if ext == 'stp': # 3D model
-            with open(f"libraries/3D/{canonical}", "wb") as outfile:
-                copyfileobj(handle, outfile)
+            if not dry_run:
+                with open(f"libraries/3D/{canonical}", "wb") as outfile:
+                    copyfileobj(handle, outfile)
         elif ext == 'kicad_mod': # Footprint
-            with open(f"libraries/footprints/{canonical}", "wb") as outfile:
-                copyfileobj(handle, outfile)
+            if not dry_run:
+                with open(f"libraries/footprints/{canonical}", "wb") as outfile:
+                    copyfileobj(handle, outfile)
         elif ext == 'lib': # Schematic symbol
             new_lib = KiCADSchematicSymbolLibrary.read(io.TextIOWrapper(handle, encoding="utf-8"))
             # Get name of the one record to insert
@@ -199,14 +201,14 @@ def import_zip(filename):
             # Insert into library
             project_name = identify_project_name()
             with open(f"libraries/{project_name}.lib", "r+") as libfile:
-                libdata = libfile.read()
                 current_lib = KiCADSchematicSymbolLibrary.read(libfile)
                 # Remove old records with that name
                 current_lib.remove_by_name(name_to_insert)
                 # Insert new record with that name
                 current_lib.records.append(new_lib.records[0])
                 # Write updated library
-                current_lib.write(libfile)
+                if not dry_run:
+                    current_lib.write(libfile)
         elif ext == 'dcm': # Schematic symbol
             new_lib = KiCADDocLibrary.read(io.TextIOWrapper(handle, encoding="utf-8"))
             # Get name of the one record to insert
@@ -221,7 +223,8 @@ def import_zip(filename):
                 # Insert new record with that name
                 current_doclib.records.append(new_lib.records[0])
                 # Write updated library
-                current_doclib.write(libfile)
+                if not dry_run:
+                    current_doclib.write(libfile)
         elif ext in ['stl', 'wrl', 'mod']:
             pass # Ignore those files
         else:
@@ -233,18 +236,20 @@ if __name__ == "__main__":
     parser.add_argument("-f", "--files", nargs="*", help="Select a specific file to import")
     parser.add_argument("-l", "--latest", help="Import the most recently changed files from the given directory.")
     parser.add_argument("-n", "--number", type=int, default=1, help="For -l/--latest: How many to import")
+    parser.add_argument("-d", "--dry", action="store_true", help="Do not modify or copy libraries, just print what would be done")
     args = parser.parse_args()
 
     if args.latest:
-        print(f"Importing latest {args.number} LIB_*.zip files in {args.latest}...")
+        print(f"Importing latest {args.number} LIB_*.zip file(s) in {args.latest}...")
         all_files = glob.glob(os.path.join(args.latest, "LIB_*.zip"))
         most_recently_modified_zips = sorted(all_files, key=lambda t: -os.stat(t).st_mtime)
         # Import each file
         to_import = most_recently_modified_zips[:args.number]
         for file in to_import:
             print(f"Importing {file}")
-            import_zip(file)
+            import_zip(file, args.dry)
 
-    for file in args.files:
-        print(f"Importing {file}")
-        import_zip(file)
+    if args.files is not None:
+        for file in args.files:
+            print(f"Importing {file}")
+            import_zip(file, args.dry)
