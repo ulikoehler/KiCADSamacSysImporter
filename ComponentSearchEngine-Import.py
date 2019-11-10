@@ -216,7 +216,6 @@ def import_zip(filename, dry_run=False):
             # Insert into library
             project_name = identify_project_name()
             with open(f"libraries/{project_name}.dcm", "r+") as libfile:
-                libdata = libfile.read()
                 current_doclib = KiCADDocLibrary.read(libfile)
                 # Remove old records with that name
                 current_doclib.remove_by_name(name_to_insert)
