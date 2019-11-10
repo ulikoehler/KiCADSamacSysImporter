@@ -20,7 +20,7 @@ KiCADSamacSysImporter **does not**:
 
 Copy `ComponentSearchEngine-Import.py` into the root of your project, where your `[project name].pro` file is located, conveniently done using
 ```sh
-wget -qO ComponentSearchEngine-Import.py https://raw.githubusercontent.com/ulikoehler/KiCADSamacSysImporter/master/ComponentSearchEngine-Import.py.py
+wget -qO ComponentSearchEngine-Import.py https://raw.githubusercontent.com/ulikoehler/KiCADSamacSysImporter/master/ComponentSearchEngine-Import.py && chmod a+x ComponentSearchEngine-Import.py
 ```
 The script will expect `libraries/[project name].lib` for project-local schematic symbols and the `libraries/footprints` folder for footprints plus the `libraries/3D` folder where STEP files will be placed.
 
