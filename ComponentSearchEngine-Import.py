@@ -10,7 +10,7 @@ __author__ = "Uli Köhler"
 __license__ = "Apache License 2.0"
 
 def_re = re.compile(r"DEF\s+([^\s]+)")
-cmp_re = re.compile(r"$CMP\s+([^\s]+)")
+cmp_re = re.compile(r"\$CMP\s+([^\s]+)")
 
 class KiCADDocLibrary(object):
 
@@ -63,7 +63,8 @@ class KiCADDocLibrary(object):
         Return the name of the given record, or None if not identifiable
         """
         for line in record:
-            m = def_re.search(line)
+            print(line)
+            m = cmp_re.search(line)
             if m is not None:
                 return m.group(1)
         return None
@@ -202,6 +203,8 @@ def import_zip(filename, dry_run=False):
             project_name = identify_project_name()
             with open(f"libraries/{project_name}.lib", "r+") as libfile:
                 current_lib = KiCADSchematicSymbolLibrary.read(libfile)
+                # Reset lib file pointer so we write right at the start of the file
+                libfile.seek(0)
                 # Remove old records with that name
                 current_lib.remove_by_name(name_to_insert)
                 # Insert new record with that name
@@ -217,6 +220,8 @@ def import_zip(filename, dry_run=False):
             project_name = identify_project_name()
             with open(f"libraries/{project_name}.dcm", "r+") as libfile:
                 current_doclib = KiCADDocLibrary.read(libfile)
+                # Reset lib file pointer so we write right at the start of the file
+                libfile.seek(0)
                 # Remove old records with that name
                 current_doclib.remove_by_name(name_to_insert)
                 # Insert new record with that name
