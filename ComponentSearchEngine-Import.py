@@ -63,7 +63,6 @@ class KiCADDocLibrary(object):
         Return the name of the given record, or None if not identifiable
         """
         for line in record:
-            print(line)
             m = cmp_re.search(line)
             if m is not None:
                 return m.group(1)
